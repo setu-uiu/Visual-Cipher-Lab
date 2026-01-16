@@ -19,7 +19,8 @@ import {
   ChevronRight,
   Bell,
   Eye,
-  Shield
+  Shield,
+  LogIn
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -371,7 +372,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
               ) : step === 0 ? (
                 /* ACCESS SELECTION STEP */
                 <div className="space-y-8 animate-fadeIn">
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-6">
                     <button 
                       onClick={() => setStep(1)}
                       className="group flex items-center gap-6 p-6 border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 rounded transition-all text-left"
@@ -381,28 +382,38 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="orbitron text-sm font-black text-white tracking-widest uppercase group-hover:text-cyan-400 transition-colors">Agent Authorization</span>
-                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Requires ID & Lab Access Code</span>
+                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Enter secure lab environment</span>
                       </div>
                       <ChevronRight className="ml-auto w-5 h-5 text-gray-700 group-hover:text-cyan-400" />
                     </button>
 
-                    <button 
-                      onClick={handlePublicAccess}
-                      className="group flex items-center gap-6 p-6 border border-white/10 bg-white/5 hover:bg-white/10 rounded transition-all text-left"
-                    >
-                      <div className="p-3 bg-white/10 rounded">
-                        <Eye className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="orbitron text-sm font-black text-white tracking-widest uppercase group-hover:text-white transition-colors">Public Observer</span>
-                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Read-Only Restricted Analytics</span>
-                      </div>
-                      <ChevronRight className="ml-auto w-5 h-5 text-gray-700 group-hover:text-white" />
-                    </button>
+                    <div className="space-y-3">
+                      <button 
+                        onClick={handlePublicAccess}
+                        className="w-full group flex items-center gap-6 p-6 border border-white/10 bg-white/5 hover:bg-white/10 rounded transition-all text-left"
+                      >
+                        <div className="p-3 bg-white/10 rounded">
+                          <Eye className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="orbitron text-sm font-black text-white tracking-widest uppercase group-hover:text-white transition-colors">Public Observer</span>
+                          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Read-only simulation access</span>
+                        </div>
+                        <ChevronRight className="ml-auto w-5 h-5 text-gray-700 group-hover:text-white" />
+                      </button>
+                      
+                      {/* Secondary Sign In Option for Public Observer Path */}
+                      <button 
+                        onClick={() => setStep(1)}
+                        className="w-full py-2 flex items-center justify-center gap-2 text-[10px] font-black text-gray-700 hover:text-cyan-500 transition-all uppercase tracking-[0.3em]"
+                      >
+                        <LogIn className="w-3 h-3" /> Already have an Agent ID? Sign In
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="pt-4 text-center">
-                    <p className="text-[9px] text-gray-700 font-bold uppercase tracking-[0.2em]">Select authentication path for Node connection.</p>
+                    <p className="text-[9px] text-gray-700 font-bold uppercase tracking-[0.2em]">Authorized personnel must select an uplink protocol.</p>
                   </div>
                 </div>
               ) : (

@@ -16,7 +16,8 @@ import {
   Lock,
   Key,
   CheckCircle,
-  Eye
+  Eye,
+  Zap
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -75,7 +76,7 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
     setScanState('SCANNING');
     setLogs([]);
     
-    // Authorization logic
+    // Authorization logic strictly as requested: user-121
     const authorized = accessCode.trim() === 'user-121';
     
     const stepLogs = [
@@ -96,7 +97,7 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
         setIsAuthorized(authorized);
         setScanState('COMPLETE');
       }
-    }, 400); // Faster scan duration for better UX
+    }, 400); // 2 second total scanning effect
   };
 
   const resetSession = () => {
@@ -109,6 +110,22 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
 
   return (
     <div className="space-y-12 animate-fadeIn pb-24">
+      <style>{`
+        @keyframes subtle-glitch {
+          0% { transform: translate(0); text-shadow: 0 0 5px rgba(0,245,255,0.5); }
+          20% { transform: translate(-1px, 1px); text-shadow: 1px 0 0 rgba(255,0,255,0.3), -1px 0 0 rgba(0,255,255,0.3); }
+          40% { transform: translate(-1px, -1px); }
+          60% { transform: translate(1px, 1px); }
+          80% { transform: translate(1px, -1px); }
+          100% { transform: translate(0); text-shadow: 0 0 5px rgba(0,245,255,0.5); }
+        }
+        .agent-text {
+          animation: subtle-glitch 2s infinite linear;
+          color: #00f5ff;
+          text-shadow: 0 0 10px rgba(0, 245, 255, 0.8);
+        }
+      `}</style>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-white/5 pb-8">
         <div className="text-center md:text-left">
@@ -227,6 +244,10 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
                         placeholder="••••••••"
                         className="w-full bg-black/60 border border-white/10 p-4 text-sm text-cyan-400 focus:outline-none focus:border-cyan-500/50 tracking-[0.2em] font-mono rounded-sm"
                       />
+                      <div className="mt-2 flex items-center gap-2 text-[8px] text-gray-600 uppercase tracking-widest bg-white/[0.02] p-2 border border-white/5 rounded">
+                        <Zap className="w-3 h-3 text-cyan-500/50" />
+                        <span>Security Advisory: Authorized agents utilize standard temporal bypass tokens.</span>
+                      </div>
                     </div>
 
                     <div className="space-y-6">
@@ -267,7 +288,7 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
                       </div>
 
                       <div className="space-y-4">
-                        <p className={`text-sm md:text-base leading-loose font-mono italic transition-all duration-700 ${isAuthorized ? 'text-cyan-300 font-black shadow-cyan-500/50 drop-shadow-[0_0_10px_rgba(0,245,255,0.5)] animate-pulse' : 'text-gray-400'}`}>
+                        <p className={`text-sm md:text-base leading-loose font-mono italic transition-all duration-700 ${isAuthorized ? 'agent-text font-black tracking-widest' : 'text-gray-400'}`}>
                           "{isAuthorized ? activeArtifact.agentMeaning : activeArtifact.publicMeaning}"
                         </p>
                       </div>
@@ -282,13 +303,13 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
                     {/* Confidence / Status Meter */}
                     <div className="space-y-3">
                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-[0.3em]">
-                          <span className="text-gray-700">SIGNAL_RECONSTRUCTION</span>
-                          <span className={isAuthorized ? 'text-cyan-400' : 'text-red-900'}>
-                            {isAuthorized ? '98.4%' : 'RESTRICTED'}
+                          <span className="text-gray-700">SIGNAL_INTEGRITY</span>
+                          <span className={isAuthorized ? 'text-cyan-400' : 'text-cyan-800'}>
+                            {isAuthorized ? '99.8%' : '99.4%'}
                           </span>
                        </div>
                        <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                          <div className={`h-full transition-all duration-1000 ${isAuthorized ? 'bg-cyan-500 w-[98.4%]' : 'bg-red-900 w-[15%]'}`} />
+                          <div className={`h-full transition-all duration-1000 ${isAuthorized ? 'bg-cyan-500 w-[99.8%]' : 'bg-cyan-900 w-[99.4%]'}`} />
                        </div>
                     </div>
 
