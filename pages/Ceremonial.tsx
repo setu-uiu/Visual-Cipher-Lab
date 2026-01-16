@@ -1,0 +1,264 @@
+
+import React, { useState } from 'react';
+import { 
+  Scan, 
+  Activity, 
+  Search, 
+  X, 
+  Terminal, 
+  Cpu, 
+  Info,
+  Flower2,
+  Grid3X3,
+  Layers2,
+  ShieldCheck,
+  AlertTriangle
+} from 'lucide-react';
+import { UserRole } from '../types';
+
+interface CeremonialProps {
+  role: UserRole;
+}
+
+interface ArtifactData {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  glyph: React.ReactNode;
+  decodedMeaning: string;
+}
+
+const ARTIFACTS: ArtifactData[] = [
+  {
+    id: 1,
+    title: "PETAL INDEX PROTOCOL 🌸",
+    subtitle: "V-FLORAL-01",
+    description: "Traditional floral arrangement where petal counts and spacing hide alphabetical offsets.",
+    glyph: <Flower2 className="w-12 h-12 stroke-[1.5]" />,
+    decodedMeaning: "Primary communication channel active. Status: NOMINAL. Extraction window confirmed for 0400."
+  },
+  {
+    id: 2,
+    title: "SYMMETRY BREAK SIGNAL 💎",
+    subtitle: "V-GRID-02",
+    description: "Geometric patterns where intentional micro-asymmetry signals operational status.",
+    glyph: <Grid3X3 className="w-12 h-12 stroke-[1.5]" />,
+    decodedMeaning: "Grid scan verified. Node alignment at 98.4% efficiency. Sector-9 remains under tactical observation."
+  },
+  {
+    id: 3,
+    title: "CHROMATIC RATIO 🎨",
+    subtitle: "V-HUE-03",
+    description: "Spectral analysis of ceremonial colors to hide binary status codes.",
+    glyph: <Layers2 className="w-12 h-12 stroke-[1.5]" />,
+    decodedMeaning: "Color sync synchronized. Uplink secured via low-frequency chromatic shift. Signal integrity: STABLE."
+  }
+];
+
+const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
+  const [activeArtifact, setActiveArtifact] = useState<ArtifactData | null>(null);
+  const [scanState, setScanState] = useState<'IDLE' | 'SCANNING' | 'COMPLETE'>('IDLE');
+  const [logs, setLogs] = useState<string[]>([]);
+
+  const startScan = () => {
+    setScanState('SCANNING');
+    setLogs([]);
+    const stepLogs = [
+      "INITIALIZING KERNEL SYNC...",
+      "STRIPPING SEMANTIC LAYERS...",
+      "QUERYING SIGNAL SEEDS...",
+      "RECONSTRUCTING INTEL..."
+    ];
+
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < stepLogs.length) {
+        setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${stepLogs[i]}`]);
+        i++;
+      } else {
+        clearInterval(interval);
+        setScanState('COMPLETE');
+      }
+    }, 600);
+  };
+
+  const resetSession = () => {
+    setActiveArtifact(null);
+    setScanState('IDLE');
+    setLogs([]);
+  };
+
+  return (
+    <div className="space-y-12 animate-fadeIn pb-24">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-white/5 pb-8">
+        <div className="text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-950/30 border border-cyan-500/20 text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase mb-2">
+            <ShieldCheck className="w-3 h-3" /> SECURE CEREMONIAL ANALYTICS
+          </div>
+          <h2 className="orbitron text-4xl font-black tracking-tighter text-white">
+            CIPHER <span className="text-cyan-400">ARCHIVE</span>
+          </h2>
+          <p className="text-gray-500 text-[10px] mt-2 uppercase tracking-[0.2em] font-bold">
+            GLYPH REPOSITORY // V-LANG-01 // STATUS: OPERATIONAL
+          </p>
+        </div>
+      </div>
+
+      {/* Artifact Grid - High Contrast White Card Aesthetic */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {ARTIFACTS.map((art) => (
+          <div 
+            key={art.id} 
+            onClick={() => setActiveArtifact(art)}
+            className="group bg-[#0A0A0A] border border-white/5 p-4 rounded-sm cursor-pointer hover:border-cyan-500/30 transition-all duration-500"
+          >
+            <div className="aspect-square bg-white flex items-center justify-center mb-6 relative overflow-hidden group-hover:shadow-[0_0_30px_rgba(0,245,255,0.05)] transition-all">
+               <div className="text-black group-hover:scale-110 transition-transform duration-700">{art.glyph}</div>
+               <div className="absolute bottom-2 right-2 text-[8px] text-gray-400 font-mono uppercase tracking-tighter">ID: {art.subtitle}</div>
+            </div>
+            <div className="space-y-3 px-2">
+              <h3 className="orbitron text-sm font-bold text-white tracking-widest uppercase">{art.title}</h3>
+              <p className="text-[10px] text-gray-500 leading-relaxed font-light font-mono h-12 overflow-hidden">
+                {art.description}
+              </p>
+              <div className="pt-2 flex items-center gap-2 text-[9px] font-bold text-cyan-500/70 uppercase tracking-widest group-hover:text-cyan-400 transition-colors">
+                <Search className="w-3 h-3" /> CLICK TO ANALYZE SIGNAL
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal Interface */}
+      {activeArtifact && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/98 backdrop-blur-2xl animate-fadeIn">
+          <div className="w-full max-w-4xl bg-[#050505] border border-white/10 rounded-sm overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b bg-white/5 border-white/5">
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full animate-pulse bg-cyan-500`} />
+                <span className="orbitron text-[10px] font-bold tracking-[0.3em] uppercase text-cyan-500">
+                  {scanState === 'COMPLETE' ? `SIGNAL ANALYSIS : VERIFIED` : scanState === 'SCANNING' ? 'STRIPPING LAYERS...' : 'AWAITING SCAN'}
+                </span>
+              </div>
+              <button onClick={resetSession} className="text-gray-600 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col lg:flex-row h-full max-h-[85vh]">
+              {/* Left: Visualization */}
+              <div className="w-full lg:w-1/2 p-8 bg-black border-r border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="w-full aspect-square bg-white flex items-center justify-center relative shadow-[0_0_40px_rgba(255,255,255,0.05)] rounded-sm">
+                   <div className={`text-black transition-all duration-1000 ${scanState === 'SCANNING' ? 'scale-75 opacity-50 blur-sm' : 'scale-150'}`}>
+                      {activeArtifact.glyph}
+                   </div>
+                   {scanState === 'SCANNING' && <div className="scanner-line" />}
+                </div>
+
+                {/* Session Trace Log */}
+                <div className="w-full mt-8 bg-[#080808] border border-white/5 p-4 rounded-sm font-mono text-[8px] text-gray-700 h-28 overflow-hidden flex flex-col justify-end">
+                   <div className="flex items-center gap-2 mb-2 text-cyan-900 border-b border-cyan-900/10 pb-1">
+                      <Terminal className="w-2.5 h-2.5" /> <span>SESSION_TRACE: {activeArtifact.id}</span>
+                   </div>
+                   <div className="space-y-0.5">
+                      {logs.map((log, i) => <div key={i} className="animate-fadeIn opacity-40">{log}</div>)}
+                      {scanState === 'IDLE' && <div className="animate-pulse">AWAITING HANDSHAKE...</div>}
+                      {scanState === 'COMPLETE' && <div className="font-bold text-cyan-400">[✓] PROCESS TERMINATED: STABLE</div>}
+                   </div>
+                </div>
+              </div>
+
+              {/* Right: Results Panel */}
+              <div className="w-full lg:w-1/2 p-10 flex flex-col justify-center overflow-y-auto">
+                {scanState === 'IDLE' ? (
+                  <div className="space-y-10">
+                    <div className="space-y-2">
+                      <h3 className="orbitron text-xl font-black text-white tracking-widest uppercase">{activeArtifact.title}</h3>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">Archive Protocol: {activeArtifact.subtitle}</p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <button 
+                        onClick={startScan}
+                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-black py-5 text-xs font-bold orbitron tracking-[0.4em] transition-all rounded-sm flex items-center justify-center gap-3 shadow-lg shadow-cyan-500/10"
+                      >
+                        <Scan className="w-4 h-4" /> RUN SEMANTIC SCAN
+                      </button>
+                      <p className="text-[8px] text-gray-800 text-center uppercase tracking-[0.2em] font-bold"> Authorization Level: {role}</p>
+                    </div>
+                  </div>
+                ) : scanState === 'SCANNING' ? (
+                  <div className="text-center space-y-8 py-12">
+                     <div className="relative inline-block">
+                        <Cpu className="w-16 h-16 text-cyan-900 animate-spin opacity-20" />
+                        <Activity className="absolute inset-0 m-auto w-8 h-8 text-cyan-500 animate-pulse" />
+                     </div>
+                     <div className="space-y-2">
+                        <p className="orbitron text-white text-xs font-bold tracking-[0.5em] uppercase animate-pulse">Scanning Signal Hierarchy</p>
+                        <p className="text-gray-800 text-[9px] font-mono uppercase">Deciphering visual layers...</p>
+                     </div>
+                  </div>
+                ) : (
+                  <div className="space-y-8 animate-fadeIn">
+                    <div className="p-8 bg-white/[0.02] border border-white/10 rounded-sm relative overflow-hidden flex flex-col gap-6">
+                      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                        <div className="flex items-center gap-3 text-cyan-500">
+                           <ShieldCheck className="w-5 h-5" />
+                           <span className="orbitron text-[10px] font-bold tracking-[0.2em] uppercase">DECODED INTELLIGENCE</span>
+                        </div>
+                        <span className="text-[9px] text-gray-800 font-mono">REF: 0x{activeArtifact.id}F2</span>
+                      </div>
+
+                      <div className="space-y-4">
+                        <p className="text-sm leading-loose text-gray-400 font-mono italic">
+                          "{activeArtifact.decodedMeaning}"
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Confidence Meter */}
+                    <div className="space-y-3">
+                       <div className="flex justify-between items-center text-[9px] text-gray-700 font-bold uppercase tracking-[0.3em]">
+                          <span>SIGNAL_RECONSTRUCTION</span>
+                          <span className="text-cyan-400">98.4%</span>
+                       </div>
+                       <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-full bg-cyan-500 w-[98.4%] transition-all duration-1000" />
+                       </div>
+                    </div>
+
+                    <button 
+                      onClick={resetSession}
+                      className="w-full border border-white/10 text-gray-700 hover:text-white hover:border-white/20 py-5 text-xs font-bold orbitron tracking-[0.3em] transition-all uppercase rounded-sm"
+                    >
+                      TERMINATE SESSION
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer Disclaimer */}
+      <div className="p-8 bg-black/40 border border-white/5 rounded-sm flex flex-col md:flex-row items-center justify-between gap-6">
+         <div className="flex items-start gap-4">
+            <AlertTriangle className="w-6 h-6 text-gray-800" />
+            <div className="space-y-1">
+               <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">RESEARCH CLASSIFICATION : LEVEL 1</p>
+               <p className="text-[9px] text-gray-700 uppercase leading-relaxed font-mono max-w-2xl">
+                  THIS PLATFORM IS A FICTIONAL EDUCATIONAL SIMULATION. ALL ENCODING TECHNIQUES AND SIGNAL PATTERNS ARE FOR ACADEMIC DEMONSTRATION PURPOSES ONLY. IT DOES NOT PROVIDE ACTUAL CRYPTOGRAPHIC SECURITY FOR REAL-WORLD SENSITIVE DATA.
+               </p>
+            </div>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+export default Ceremonial;

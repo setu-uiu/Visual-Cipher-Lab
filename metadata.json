@@ -1,0 +1,8 @@
+{
+  "name": "Visual Cipher Lab",
+  "description": "A futuristic cybersecurity research platform demonstrating experimental visual encoding and symbolic communication techniques.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
