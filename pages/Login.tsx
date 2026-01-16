@@ -17,7 +17,9 @@ import {
   ShieldCheck,
   Lock,
   ChevronRight,
-  Bell
+  Bell,
+  Eye,
+  Shield
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -27,7 +29,7 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // 0: Choice, 1: ID, 2: Scan, 3: Passphrase
   const [idInput, setIdInput] = useState('');
   const [passphrase, setPassphrase] = useState('');
   const [isScanning, setIsScanning] = useState(false);
@@ -69,13 +71,18 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
           onLogin(role, id);
         }, 2000);
       }
-    }, 25);
+    }, 20);
+  };
+
+  const handlePublicAccess = () => {
+    addLog("INITIATING PUBLIC OBSERVER SESSION...");
+    triggerSuccessSequence(UserRole.OBSERVER, "GUEST-OBSERVER");
   };
 
   const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
     if (idInput.length < 4) {
-      setError('INVALID IDENTITY FORMAT');
+      setError('INVALID IDENTITY FORMAT (MIN 4 CHARS)');
       return;
     }
     setError(null);
@@ -89,7 +96,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
     addLog('COMMENCING NEURAL SIGNATURE VERIFICATION...');
     let prog = 0;
     const interval = setInterval(() => {
-      prog += Math.random() * 15;
+      prog += Math.random() * 20;
       if (prog >= 100) {
         setScanProgress(100);
         clearInterval(interval);
@@ -97,11 +104,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
           setIsScanning(false);
           setStep(3);
           addLog('NEURAL SIGNATURE CONFIRMED. TEMPORAL SEED GENERATED.');
-        }, 800);
+        }, 600);
       } else {
         setScanProgress(prog);
       }
-    }, 150);
+    }, 100);
   };
 
   const handleStep3 = (e: React.FormEvent) => {
@@ -139,16 +146,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
         setError("VALID PROTOCOL EMAIL REQUIRED");
         return;
       }
-      // Generate random 4-digit code
       const code = Math.floor(1000 + Math.random() * 9000).toString();
       setGeneratedCode(code);
       addLog(`BYPASS CODE DISPATCHED TO: ${emergencyData.email}`);
       setEmergencyStep(3);
-      
-      // Simulate toast notification
-      setTimeout(() => {
-        setShowCodeNotification(true);
-      }, 800);
+      setTimeout(() => setShowCodeNotification(true), 800);
     } else if (emergencyStep === 3) {
       if (emergencyData.code !== generatedCode) {
         setError("INVALID 2FA TOKEN");
@@ -170,9 +172,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
       <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-8 font-mono animate-fadeIn overflow-hidden">
         <div className="absolute inset-0 pointer-events-none crt-scanline opacity-30" />
         <div className="absolute inset-0 bg-cyan-500/5 mix-blend-overlay" />
-        
         <div className="max-w-3xl w-full space-y-12 relative">
-          {/* Success Header */}
           <div className="space-y-4 border-l-2 border-cyan-500 pl-8 py-2">
             <div className="flex items-center gap-4 text-cyan-500 animate-pulse">
               <ShieldCheck className="w-10 h-10" />
@@ -184,8 +184,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
               (Command-Oriented Interface) // Version: 0.9.1-K
             </p>
           </div>
-
-          {/* Core Authorization Message */}
           <div className="space-y-8 bg-cyan-950/10 border border-cyan-500/20 p-10 rounded shadow-[0_0_60px_rgba(0,245,255,0.08)]">
             <div className="flex items-center gap-4 mb-6">
                <div className="w-16 h-1 bg-cyan-500" />
@@ -194,22 +192,13 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                </h3>
                <div className="w-16 h-1 bg-cyan-500" />
             </div>
-
             <div className="space-y-6 text-sm md:text-xl leading-relaxed text-cyan-100 font-mono tracking-wider">
-               <p className="opacity-0 animate-[slideInLeft_0.5s_forwards] delay-100">
-                Engaging hardened cipher stack and restricted transformation protocols.
-               </p>
-               <p className="opacity-0 animate-[slideInLeft_0.5s_forwards] delay-300">
-                Unauthorized observation will yield indistinguishable noise signatures.
-               </p>
+               <p className="animate-[slideInLeft_0.5s_forwards] delay-100">Engaging hardened cipher stack and restricted transformation protocols.</p>
+               <p className="animate-[slideInLeft_0.5s_forwards] delay-300">Unauthorized observation will yield indistinguishable noise signatures.</p>
                <div className="h-px bg-cyan-500/20 my-4" />
-               <p className="text-cyan-400 font-black uppercase tracking-[0.2em] opacity-0 animate-[slideInLeft_0.5s_forwards] delay-500">
-                Proceed under active counter-analysis conditions.
-               </p>
+               <p className="text-cyan-400 font-black uppercase tracking-[0.2em] animate-[slideInLeft_0.5s_forwards] delay-500">Proceed under active counter-analysis conditions.</p>
             </div>
           </div>
-
-          {/* Telemetry Bars */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8">
             <div className="space-y-3">
                <div className="flex justify-between text-[10px] text-cyan-700 font-bold uppercase tracking-widest">
@@ -230,7 +219,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                </div>
             </div>
           </div>
-
           <div className="flex items-center justify-center gap-6 pt-12">
             <div className="flex gap-2">
               <div className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
@@ -246,7 +234,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 relative">
-      {/* Code Notification Toast (Simulation) */}
       {showCodeNotification && (
         <div className="fixed top-24 right-8 z-[300] bg-cyan-500 text-black p-5 rounded border-b-4 border-cyan-700 shadow-[0_20px_60px_rgba(0,0,0,0.4)] animate-slideInRight max-w-[300px]">
           <div className="flex items-start gap-4">
@@ -268,7 +255,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        {/* Terminal Logs (Visual Decoration) */}
         <div className="lg:col-span-2 hidden lg:flex flex-col h-[520px] bg-black/90 border border-cyan-500/20 rounded p-5 font-mono text-[9px] text-cyan-900 overflow-hidden shadow-2xl relative">
           <div className="absolute inset-0 bg-cyan-500/[0.02] pointer-events-none" />
           <div className="flex items-center gap-2 mb-4 text-cyan-700 border-b border-cyan-500/10 pb-3">
@@ -293,7 +279,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
           </div>
         </div>
 
-        {/* Auth Interface */}
         <div className="lg:col-span-3 space-y-8">
           <div className="flex flex-col items-center text-center space-y-3 mb-10">
             <div className="w-14 h-14 bg-cyan-500/5 border border-cyan-500/30 flex items-center justify-center rounded shadow-[0_0_20px_rgba(0,245,255,0.1)]">
@@ -308,15 +293,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
           </div>
 
           <div className="bg-black/80 border border-white/5 rounded-lg overflow-hidden backdrop-blur-3xl relative shadow-2xl">
-            {/* Multi-step progress bar */}
-            <div className="h-1.5 bg-white/5 w-full relative overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-700 shadow-[0_0_15px_rgba(0,245,255,0.5)] ${isEmergencyMode ? 'bg-amber-500' : 'bg-cyan-500'}`} 
-                style={{ width: `${isEmergencyMode ? (emergencyStep / 3) * 100 : (step / 3) * 100}%` }} 
-              />
-            </div>
+            {step > 0 && (
+              <div className="h-1.5 bg-white/5 w-full relative overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-700 shadow-[0_0_15px_rgba(0,245,255,0.5)] ${isEmergencyMode ? 'bg-amber-500' : 'bg-cyan-500'}`} 
+                  style={{ width: `${isEmergencyMode ? (emergencyStep / 3) * 100 : (step / 3) * 100}%` }} 
+                />
+              </div>
+            )}
 
-            <div className="p-12">
+            <div className="p-8 md:p-12">
               {isEmergencyMode ? (
                 /* EMERGENCY BYPASS FLOW */
                 <form onSubmit={handleEmergencyStep} className="space-y-8 animate-fadeIn">
@@ -338,7 +324,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                       </button>
                     </div>
                   )}
-                  
                   {emergencyStep === 2 && (
                     <div className="space-y-4">
                       <label className="text-[10px] text-amber-700 font-black uppercase tracking-[0.3em] flex items-center gap-3">
@@ -357,7 +342,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                       </button>
                     </div>
                   )}
-
                   {emergencyStep === 3 && (
                     <div className="space-y-4">
                       <label className="text-[10px] text-amber-700 font-black uppercase tracking-[0.3em] flex items-center gap-3">
@@ -378,76 +362,99 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                       </button>
                     </div>
                   )}
-
                   <div className="text-center">
-                    <button 
-                      type="button"
-                      onClick={() => setIsEmergencyMode(false)}
-                      className="text-[9px] text-gray-600 hover:text-white transition-colors tracking-[0.2em] uppercase font-bold"
-                    >
+                    <button type="button" onClick={() => setIsEmergencyMode(false)} className="text-[9px] text-gray-600 hover:text-white transition-colors tracking-[0.2em] uppercase font-bold">
                       Return to Standard Login
                     </button>
                   </div>
                 </form>
+              ) : step === 0 ? (
+                /* ACCESS SELECTION STEP */
+                <div className="space-y-8 animate-fadeIn">
+                  <div className="grid grid-cols-1 gap-4">
+                    <button 
+                      onClick={() => setStep(1)}
+                      className="group flex items-center gap-6 p-6 border border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 rounded transition-all text-left"
+                    >
+                      <div className="p-3 bg-cyan-500/20 rounded">
+                        <Shield className="w-8 h-8 text-cyan-400" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="orbitron text-sm font-black text-white tracking-widest uppercase group-hover:text-cyan-400 transition-colors">Agent Authorization</span>
+                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Requires ID & Lab Access Code</span>
+                      </div>
+                      <ChevronRight className="ml-auto w-5 h-5 text-gray-700 group-hover:text-cyan-400" />
+                    </button>
+
+                    <button 
+                      onClick={handlePublicAccess}
+                      className="group flex items-center gap-6 p-6 border border-white/10 bg-white/5 hover:bg-white/10 rounded transition-all text-left"
+                    >
+                      <div className="p-3 bg-white/10 rounded">
+                        <Eye className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="orbitron text-sm font-black text-white tracking-widest uppercase group-hover:text-white transition-colors">Public Observer</span>
+                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Read-Only Restricted Analytics</span>
+                      </div>
+                      <ChevronRight className="ml-auto w-5 h-5 text-gray-700 group-hover:text-white" />
+                    </button>
+                  </div>
+                  
+                  <div className="pt-4 text-center">
+                    <p className="text-[9px] text-gray-700 font-bold uppercase tracking-[0.2em]">Select authentication path for Node connection.</p>
+                  </div>
+                </div>
               ) : (
-                /* STANDARD LOGIN FLOW */
+                /* AGENT AUTH FLOW */
                 <>
                   {step === 1 && (
                     <form onSubmit={handleStep1} className="space-y-8 animate-fadeIn">
                       <div className="space-y-4">
                         <label className="text-[10px] text-cyan-700 font-black uppercase tracking-[0.3em] flex items-center gap-3">
-                          <Cpu className="w-4 h-4" /> Researcher UUID
+                          <Cpu className="w-4 h-4" /> Agent Identity ID
                         </label>
                         <input 
                           autoFocus
                           type="text"
-                          placeholder="USER-101 (OR SIMILAR)"
+                          placeholder="AGENT-ID-XXXX"
                           value={idInput}
                           onChange={(e) => setIdInput(e.target.value)}
                           className="w-full bg-black/60 border border-white/10 p-5 text-sm text-cyan-400 focus:outline-none focus:border-cyan-500/50 tracking-[0.2em] font-mono rounded"
                         />
                       </div>
-                      <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-black py-5 text-xs font-black orbitron tracking-[0.3em] transition-all rounded shadow-lg shadow-cyan-500/20 uppercase">
-                        Proceed to Biometrics
-                      </button>
+                      <div className="flex gap-4">
+                        <button type="button" onClick={() => setStep(0)} className="px-6 border border-white/10 text-gray-600 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-all">Back</button>
+                        <button className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black py-5 text-xs font-black orbitron tracking-[0.3em] transition-all rounded shadow-lg shadow-cyan-500/20 uppercase">
+                          Initialize Verification
+                        </button>
+                      </div>
                     </form>
                   )}
 
                   {step === 2 && (
                     <div className="space-y-10 animate-fadeIn text-center">
                       <label className="text-[10px] text-cyan-700 font-black uppercase tracking-[0.3em] flex items-center gap-3 justify-center">
-                        <Fingerprint className="w-4 h-4" /> Neural Signature Fix
+                        <Fingerprint className="w-4 h-4" /> Biometric Sync
                       </label>
-
-                      <div className="relative aspect-square max-w-[240px] mx-auto bg-cyan-950/5 rounded-full border-2 border-cyan-500/10 flex items-center justify-center overflow-hidden">
+                      <div className="relative aspect-square max-w-[200px] mx-auto bg-cyan-950/5 rounded-full border-2 border-cyan-500/10 flex items-center justify-center overflow-hidden">
                         {isScanning ? (
                           <>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Activity className="w-28 h-28 text-cyan-500 opacity-20 animate-pulse" />
-                            </div>
-                            <div 
-                              className="absolute bottom-0 left-0 w-full bg-cyan-500/10 transition-all duration-300"
-                              style={{ height: `${scanProgress}%` }}
-                            />
-                            <Scan className="w-16 h-16 text-cyan-400 animate-pulse" />
+                            <div className="absolute inset-0 flex items-center justify-center"><Activity className="w-24 h-24 text-cyan-500 opacity-20 animate-pulse" /></div>
+                            <div className="absolute bottom-0 left-0 w-full bg-cyan-500/10 transition-all duration-300" style={{ height: `${scanProgress}%` }} />
+                            <Scan className="w-14 h-14 text-cyan-400 animate-pulse" />
                             <div className="absolute inset-0 scanner-line" />
                           </>
                         ) : (
-                          <button 
-                            onClick={startNeuralScan}
-                            className="group relative flex flex-col items-center gap-4"
-                          >
-                            <div className="w-24 h-24 bg-cyan-500/5 group-hover:bg-cyan-500/10 rounded-full flex items-center justify-center border border-cyan-500/20 transition-all scale-100 hover:scale-110 active:scale-95 shadow-[0_0_30px_rgba(0,245,255,0.05)]">
-                              <Fingerprint className="w-12 h-12 text-cyan-400" />
+                          <button onClick={startNeuralScan} className="group relative flex flex-col items-center gap-4">
+                            <div className="w-20 h-20 bg-cyan-500/5 group-hover:bg-cyan-500/10 rounded-full flex items-center justify-center border border-cyan-500/20 transition-all scale-100 hover:scale-110 shadow-[0_0_30px_rgba(0,245,255,0.05)]">
+                              <Fingerprint className="w-10 h-10 text-cyan-400" />
                             </div>
-                            <span className="text-[10px] font-black text-cyan-700 tracking-[0.3em] uppercase group-hover:text-cyan-400 animate-pulse">Touch Terminal</span>
+                            <span className="text-[10px] font-black text-cyan-700 tracking-[0.3em] uppercase group-hover:text-cyan-400 animate-pulse">Scan Biometric</span>
                           </button>
                         )}
                       </div>
-
-                      <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] italic font-light">
-                        {isScanning ? `MAPPING SYNC... ${Math.floor(scanProgress)}%` : 'STATIC NEURAL FIELD READY'}
-                      </p>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] italic font-light">{isScanning ? `MAPPING... ${Math.floor(scanProgress)}%` : 'STATIC FIELD READY'}</p>
                     </div>
                   )}
 
@@ -455,7 +462,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                     <form onSubmit={handleStep3} className="space-y-8 animate-fadeIn">
                       <div className="space-y-5">
                         <label className="text-[10px] text-cyan-700 font-black uppercase tracking-[0.3em] flex items-center gap-3">
-                          <Database className="w-4 h-4" /> Temporal Key Sequence
+                          <Database className="w-4 h-4" /> Lab Access Passphrase
                         </label>
                         <div className="relative">
                           <input 
@@ -470,10 +477,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                         </div>
                       </div>
                       <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-black py-5 text-xs font-black orbitron tracking-[0.3em] transition-all rounded shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-3 uppercase">
-                        <CheckCircle className="w-5 h-5" /> Authorize Lab Access
+                        <CheckCircle className="w-5 h-5" /> Confirm Authorization
                       </button>
                       <div className="p-5 bg-cyan-950/20 border border-cyan-500/10 rounded flex flex-col items-center gap-2">
-                        <span className="text-[9px] text-cyan-700 uppercase tracking-[0.4em] font-black">SEED PROTOCOL</span>
+                        <span className="text-[9px] text-cyan-700 uppercase tracking-[0.4em] font-black">ACCESS SEED PROTOCOL</span>
                         <span className="text-[13px] text-white font-mono font-black tracking-[0.5em] animate-pulse">RESEARCH_2024</span>
                       </div>
                     </form>
@@ -481,7 +488,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
                 </>
               )}
             </div>
-
             {error && (
               <div className="p-5 bg-red-950/40 border-t border-red-500/30 flex items-center gap-4 animate-shake">
                 <AlertCircle className="w-5 h-5 text-red-500" />
@@ -489,12 +495,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, isAuthenticated }) => {
               </div>
             )}
           </div>
-          
           <div className="text-center pt-6">
-             <button 
-               onClick={quickAccess}
-               className="text-[10px] text-gray-700 hover:text-cyan-900 transition-colors tracking-[0.3em] uppercase flex items-center gap-3 mx-auto font-bold"
-             >
+             <button onClick={quickAccess} className="text-[10px] text-gray-700 hover:text-cyan-900 transition-colors tracking-[0.3em] uppercase flex items-center gap-3 mx-auto font-bold">
                <Terminal className="w-4 h-4" /> Restricted Bypass Module
              </button>
           </div>

@@ -12,7 +12,11 @@ import {
   Grid3X3,
   Layers2,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Lock,
+  Key,
+  CheckCircle,
+  Eye
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -26,7 +30,8 @@ interface ArtifactData {
   subtitle: string;
   description: string;
   glyph: React.ReactNode;
-  decodedMeaning: string;
+  publicMeaning: string;
+  agentMeaning: string;
 }
 
 const ARTIFACTS: ArtifactData[] = [
@@ -36,7 +41,8 @@ const ARTIFACTS: ArtifactData[] = [
     subtitle: "V-FLORAL-01",
     description: "Traditional floral arrangement where petal counts and spacing hide alphabetical offsets.",
     glyph: <Flower2 className="w-12 h-12 stroke-[1.5]" />,
-    decodedMeaning: "Primary communication channel active. Status: NOMINAL. Extraction window confirmed for 0400."
+    publicMeaning: "A beautiful arrangement signifying growth and natural harmony between families.",
+    agentMeaning: "SAVE YOUR COUNTRY"
   },
   {
     id: 2,
@@ -44,7 +50,8 @@ const ARTIFACTS: ArtifactData[] = [
     subtitle: "V-GRID-02",
     description: "Geometric patterns where intentional micro-asymmetry signals operational status.",
     glyph: <Grid3X3 className="w-12 h-12 stroke-[1.5]" />,
-    decodedMeaning: "Grid scan verified. Node alignment at 98.4% efficiency. Sector-9 remains under tactical observation."
+    publicMeaning: "A delicate artistic variation symbolizing balance, elegance, and intentional imperfection.",
+    agentMeaning: "ASYMMETRY CONFIRMED — STATUS CHANGE IMMINENT."
   },
   {
     id: 3,
@@ -52,21 +59,29 @@ const ARTIFACTS: ArtifactData[] = [
     subtitle: "V-HUE-03",
     description: "Spectral analysis of ceremonial colors to hide binary status codes.",
     glyph: <Layers2 className="w-12 h-12 stroke-[1.5]" />,
-    decodedMeaning: "Color sync synchronized. Uplink secured via low-frequency chromatic shift. Signal integrity: STABLE."
+    publicMeaning: "Soft pastel tones reflecting warmth, harmony, and emotional unity.",
+    agentMeaning: "CHROMATIC SHIFT DETECTED — NEGATIVE STATE ACTIVE."
   }
 ];
 
 const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
   const [activeArtifact, setActiveArtifact] = useState<ArtifactData | null>(null);
   const [scanState, setScanState] = useState<'IDLE' | 'SCANNING' | 'COMPLETE'>('IDLE');
+  const [accessCode, setAccessCode] = useState('');
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
 
   const startScan = () => {
     setScanState('SCANNING');
     setLogs([]);
+    
+    // Authorization logic
+    const authorized = accessCode.trim() === 'user-121';
+    
     const stepLogs = [
       "INITIALIZING KERNEL SYNC...",
       "STRIPPING SEMANTIC LAYERS...",
+      authorized ? "VALIDATING AGENT TOKEN: user-121..." : "ACCESS CODE UNVERIFIED / ANONYMOUS...",
       "QUERYING SIGNAL SEEDS...",
       "RECONSTRUCTING INTEL..."
     ];
@@ -78,15 +93,18 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
         i++;
       } else {
         clearInterval(interval);
+        setIsAuthorized(authorized);
         setScanState('COMPLETE');
       }
-    }, 600);
+    }, 400); // Faster scan duration for better UX
   };
 
   const resetSession = () => {
     setActiveArtifact(null);
     setScanState('IDLE');
     setLogs([]);
+    setAccessCode('');
+    setIsAuthorized(false);
   };
 
   return (
@@ -106,7 +124,7 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
         </div>
       </div>
 
-      {/* Artifact Grid - High Contrast White Card Aesthetic */}
+      {/* Artifact Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {ARTIFACTS.map((art) => (
           <div 
@@ -139,9 +157,11 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
             {/* Modal Header */}
             <div className="flex justify-between items-center p-4 border-b bg-white/5 border-white/5">
               <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full animate-pulse bg-cyan-500`} />
-                <span className="orbitron text-[10px] font-bold tracking-[0.3em] uppercase text-cyan-500">
-                  {scanState === 'COMPLETE' ? `SIGNAL ANALYSIS : VERIFIED` : scanState === 'SCANNING' ? 'STRIPPING LAYERS...' : 'AWAITING SCAN'}
+                <div className={`w-2 h-2 rounded-full animate-pulse ${scanState === 'COMPLETE' ? (isAuthorized ? 'bg-cyan-500' : 'bg-red-500') : 'bg-cyan-500'}`} />
+                <span className={`orbitron text-[10px] font-bold tracking-[0.3em] uppercase ${scanState === 'COMPLETE' ? (isAuthorized ? 'text-cyan-500' : 'text-red-500') : 'text-cyan-500'}`}>
+                  {scanState === 'COMPLETE' 
+                    ? (isAuthorized ? 'SIGNAL ANALYSIS : VERIFIED' : 'SIGNAL ANALYSIS : FAILURE') 
+                    : scanState === 'SCANNING' ? 'STRIPPING LAYERS...' : 'AWAITING SCAN'}
                 </span>
               </div>
               <button onClick={resetSession} className="text-gray-600 hover:text-white transition-colors">
@@ -156,7 +176,18 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
                    <div className={`text-black transition-all duration-1000 ${scanState === 'SCANNING' ? 'scale-75 opacity-50 blur-sm' : 'scale-150'}`}>
                       {activeArtifact.glyph}
                    </div>
-                   {scanState === 'SCANNING' && <div className="scanner-line" />}
+                   {(scanState === 'SCANNING' || (scanState === 'COMPLETE' && isAuthorized)) && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="scanner-line" />
+                        {isAuthorized && (
+                          <div className="absolute inset-0 bg-cyan-500/5 grid grid-cols-12 grid-rows-12 opacity-30">
+                            {Array.from({ length: 144 }).map((_, i) => (
+                              <div key={i} className="border-[0.5px] border-cyan-500/10" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                   )}
                 </div>
 
                 {/* Session Trace Log */}
@@ -167,7 +198,11 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
                    <div className="space-y-0.5">
                       {logs.map((log, i) => <div key={i} className="animate-fadeIn opacity-40">{log}</div>)}
                       {scanState === 'IDLE' && <div className="animate-pulse">AWAITING HANDSHAKE...</div>}
-                      {scanState === 'COMPLETE' && <div className="font-bold text-cyan-400">[✓] PROCESS TERMINATED: STABLE</div>}
+                      {scanState === 'COMPLETE' && (
+                        <div className={`font-bold ${isAuthorized ? 'text-cyan-400' : 'text-red-900'}`}>
+                          {isAuthorized ? '[✓] PROCESS TERMINATED: STABLE' : '[!] AUTHENTICATION MISMATCH: PUBLIC FALLBACK'}
+                        </div>
+                      )}
                    </div>
                 </div>
               </div>
@@ -175,10 +210,23 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
               {/* Right: Results Panel */}
               <div className="w-full lg:w-1/2 p-10 flex flex-col justify-center overflow-y-auto">
                 {scanState === 'IDLE' ? (
-                  <div className="space-y-10">
+                  <div className="space-y-8">
                     <div className="space-y-2">
                       <h3 className="orbitron text-xl font-black text-white tracking-widest uppercase">{activeArtifact.title}</h3>
                       <p className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">Archive Protocol: {activeArtifact.subtitle}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="block text-[9px] font-bold text-gray-600 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                        <Key className="w-3 h-3" /> Access Code Input
+                      </label>
+                      <input 
+                        type="text" 
+                        value={accessCode}
+                        onChange={(e) => setAccessCode(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-black/60 border border-white/10 p-4 text-sm text-cyan-400 focus:outline-none focus:border-cyan-500/50 tracking-[0.2em] font-mono rounded-sm"
+                      />
                     </div>
 
                     <div className="space-y-6">
@@ -188,7 +236,10 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
                       >
                         <Scan className="w-4 h-4" /> RUN SEMANTIC SCAN
                       </button>
-                      <p className="text-[8px] text-gray-800 text-center uppercase tracking-[0.2em] font-bold"> Authorization Level: {role}</p>
+                      <div className="flex justify-between items-center text-[8px] text-gray-800 uppercase tracking-[0.2em] font-bold">
+                        <span>Authorization: {role}</span>
+                        <span className="flex items-center gap-1"><Info className="w-2.5 h-2.5" /> Public Access Default</span>
+                      </div>
                     </div>
                   </div>
                 ) : scanState === 'SCANNING' ? (
@@ -204,39 +255,61 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
                   </div>
                 ) : (
                   <div className="space-y-8 animate-fadeIn">
-                    <div className="p-8 bg-white/[0.02] border border-white/10 rounded-sm relative overflow-hidden flex flex-col gap-6">
-                      <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                        <div className="flex items-center gap-3 text-cyan-500">
-                           <ShieldCheck className="w-5 h-5" />
-                           <span className="orbitron text-[10px] font-bold tracking-[0.2em] uppercase">DECODED INTELLIGENCE</span>
+                    <div className={`p-8 bg-white/[0.02] border rounded-sm relative overflow-hidden flex flex-col gap-6 transition-colors duration-500 ${isAuthorized ? 'border-cyan-500/30 shadow-[0_0_20px_rgba(0,245,255,0.05)]' : 'border-red-500/20'}`}>
+                      <div className={`flex items-center justify-between border-b pb-4 ${isAuthorized ? 'border-cyan-500/10' : 'border-red-500/10'}`}>
+                        <div className={`flex items-center gap-3 ${isAuthorized ? 'text-cyan-500' : 'text-red-500/70'}`}>
+                           {isAuthorized ? <ShieldCheck className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                           <span className="orbitron text-[10px] font-bold tracking-[0.2em] uppercase">
+                             {isAuthorized ? 'AGENT ACCESS DECODE' : 'PUBLIC ACCESS DECODE'}
+                           </span>
                         </div>
                         <span className="text-[9px] text-gray-800 font-mono">REF: 0x{activeArtifact.id}F2</span>
                       </div>
 
                       <div className="space-y-4">
-                        <p className="text-sm leading-loose text-gray-400 font-mono italic">
-                          "{activeArtifact.decodedMeaning}"
+                        <p className={`text-sm md:text-base leading-loose font-mono italic transition-all duration-700 ${isAuthorized ? 'text-cyan-300 font-black shadow-cyan-500/50 drop-shadow-[0_0_10px_rgba(0,245,255,0.5)] animate-pulse' : 'text-gray-400'}`}>
+                          "{isAuthorized ? activeArtifact.agentMeaning : activeArtifact.publicMeaning}"
                         </p>
                       </div>
+
+                      {isAuthorized && (
+                        <div className="absolute top-0 right-0 p-2 overflow-hidden pointer-events-none">
+                           <Activity className="w-12 h-12 text-cyan-500/10 animate-pulse" />
+                        </div>
+                      )}
                     </div>
 
-                    {/* Confidence Meter */}
+                    {/* Confidence / Status Meter */}
                     <div className="space-y-3">
-                       <div className="flex justify-between items-center text-[9px] text-gray-700 font-bold uppercase tracking-[0.3em]">
-                          <span>SIGNAL_RECONSTRUCTION</span>
-                          <span className="text-cyan-400">98.4%</span>
+                       <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-[0.3em]">
+                          <span className="text-gray-700">SIGNAL_RECONSTRUCTION</span>
+                          <span className={isAuthorized ? 'text-cyan-400' : 'text-red-900'}>
+                            {isAuthorized ? '98.4%' : 'RESTRICTED'}
+                          </span>
                        </div>
                        <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500 w-[98.4%] transition-all duration-1000" />
+                          <div className={`h-full transition-all duration-1000 ${isAuthorized ? 'bg-cyan-500 w-[98.4%]' : 'bg-red-900 w-[15%]'}`} />
                        </div>
                     </div>
 
-                    <button 
-                      onClick={resetSession}
-                      className="w-full border border-white/10 text-gray-700 hover:text-white hover:border-white/20 py-5 text-xs font-bold orbitron tracking-[0.3em] transition-all uppercase rounded-sm"
-                    >
-                      TERMINATE SESSION
-                    </button>
+                    <div className="flex flex-col gap-3">
+                      <button 
+                        onClick={() => {
+                          setScanState('IDLE');
+                          setAccessCode('');
+                          setIsAuthorized(false);
+                        }}
+                        className="w-full bg-white/[0.03] border border-white/5 hover:border-cyan-500/20 text-gray-600 hover:text-cyan-400 py-4 text-[10px] font-bold orbitron tracking-[0.3em] transition-all uppercase rounded-sm flex items-center justify-center gap-2"
+                      >
+                        <RefreshCcwIcon /> RE-SCAN SIGNAL
+                      </button>
+                      <button 
+                        onClick={resetSession}
+                        className="w-full border border-white/5 text-gray-800 hover:text-white hover:border-white/10 py-4 text-[10px] font-bold orbitron tracking-[0.3em] transition-all uppercase rounded-sm"
+                      >
+                        TERMINATE SESSION
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -252,7 +325,7 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
             <div className="space-y-1">
                <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">RESEARCH CLASSIFICATION : LEVEL 1</p>
                <p className="text-[9px] text-gray-700 uppercase leading-relaxed font-mono max-w-2xl">
-                  THIS PLATFORM IS A FICTIONAL EDUCATIONAL SIMULATION. ALL ENCODING TECHNIQUES AND SIGNAL PATTERNS ARE FOR ACADEMIC DEMONSTRATION PURPOSES ONLY. IT DOES NOT PROVIDE ACTUAL CRYPTOGRAPHIC SECURITY FOR REAL-WORLD SENSITIVE DATA.
+                  THIS PLATFORM IS A FICTIONAL EDUCATIONAL SIMULATION. AGENT-LEVEL DECODING IS ACCESSIBLE VIA AUTHORIZED BYPASS CODES FOR RESEARCH DEMONSTRATION.
                </p>
             </div>
          </div>
@@ -260,5 +333,11 @@ const Ceremonial: React.FC<CeremonialProps> = ({ role }) => {
     </div>
   );
 };
+
+const RefreshCcwIcon = () => (
+  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+  </svg>
+);
 
 export default Ceremonial;

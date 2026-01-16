@@ -60,32 +60,39 @@
       border: 1px solid rgba(0, 245, 255, 0.3);
       position: relative;
     }
-    .glitch-border::before {
-      content: '';
-      position: absolute;
-      top: -2px; left: -2px; right: -2px; bottom: -2px;
-      border: 1px solid rgba(255, 0, 60, 0.3);
-      z-index: -1;
-      opacity: 0;
-      transition: opacity 0.2s;
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    .glitch-border:hover::before {
-      opacity: 1;
-      animation: glitch-anim 0.3s infinite;
-    }
+    .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
 
-    @keyframes glitch-anim {
-      0% { transform: translate(0); }
-      20% { transform: translate(-2px, 2px); }
-      40% { transform: translate(-2px, -2px); }
-      60% { transform: translate(2px, 2px); }
-      80% { transform: translate(2px, -2px); }
-      100% { transform: translate(0); }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+    .animate-shake { animation: shake 0.2s ease-in-out infinite; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 245, 255, 0.2);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 245, 255, 0.4);
     }
   </style>
 <script>
-  // Polyfill for process.env used by libraries in the browser
-  window.process = window.process || { env: { NODE_ENV: 'production' } };
+  // Ensure process.env is available for the SDK
+  window.process = window.process || { env: {} };
+  window.process.env = window.process.env || {};
+  if (!window.process.env.NODE_ENV) window.process.env.NODE_ENV = 'production';
 </script>
 <script type="importmap">
 {

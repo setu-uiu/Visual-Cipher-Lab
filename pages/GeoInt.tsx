@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Search, Compass, Shield, Navigation, ExternalLink, Activity, Info } from 'lucide-react';
+import { MapPin, Search, Compass, Shield, Navigation, ExternalLink, Activity, Info, AlertCircle } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { UserRole } from '../types';
 
@@ -16,6 +16,7 @@ const GeoInt: React.FC<GeoIntProps> = ({ role }) => {
 
   const acquireLocation = () => {
     setStatus('ACQUIRING');
+    setError(null);
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by this browser.");
       setStatus('IDLE');
@@ -28,9 +29,10 @@ const GeoInt: React.FC<GeoIntProps> = ({ role }) => {
         setStatus('IDLE');
       },
       (err) => {
-        setError("Location access denied.");
+        setError(`Location access denied: ${err.message}`);
         setStatus('IDLE');
-      }
+      },
+      { timeout: 10000 }
     );
   };
 
@@ -40,10 +42,16 @@ const GeoInt: React.FC<GeoIntProps> = ({ role }) => {
     setError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) throw new Error("API KEY MISSING");
+
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: `Identify 3 secure communication drop points (masked as public venues like libraries, cafes, or parks) near my current coordinates: ${location.lat}, ${location.lng}. For each, explain why it's suitable for a clandestine visual handshake.`,
+        contents: [{
+          role: 'user',
+          parts: [{ text: `Identify 3 secure communication drop points near these coordinates: ${location.lat}, ${location.lng}. Context: Places like parks, libraries, or cafes suitable for visual signal handshakes. Use Maps grounding.` }]
+        }],
         config: {
           tools: [{ googleMaps: {} }],
           toolConfig: {
@@ -63,23 +71,23 @@ const GeoInt: React.FC<GeoIntProps> = ({ role }) => {
       });
       setStatus('DONE');
     } catch (err: any) {
-      console.error(err);
-      setError("Failed to interface with orbital mapping services.");
+      console.error("GeoInt Error Trace:", err);
+      setError(`ORBITAL SYNC FAILED: ${err.message || 'UNKNOWN ERROR'}`);
       setStatus('IDLE');
     }
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      <div className="flex flex-col md:flex-row justify-between items-end border-b border-white/5 pb-6">
+    <div className="space-y-8 animate-fadeIn px-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/5 pb-6 gap-6">
         <div>
-          <h2 className="orbitron text-2xl font-bold tracking-widest text-white uppercase">Geospatial Intel (GEO-INT)</h2>
-          <p className="text-gray-500 text-xs mt-1 uppercase tracking-tighter">Module: V-GEO-SIG // Satellite Interface: ACTIVE</p>
+          <h2 className="orbitron text-xl md:text-2xl font-bold tracking-widest text-white uppercase">Geospatial Intel (GEO-INT)</h2>
+          <p className="text-gray-500 text-[10px] md:text-xs mt-1 uppercase tracking-tighter">Module: V-GEO-SIG // Satellite Interface: ACTIVE</p>
         </div>
-        <div className="flex gap-4 mt-4 md:mt-0">
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
           <button 
             onClick={acquireLocation}
-            className="px-4 py-2 bg-white/5 border border-white/10 hover:border-cyan-500/50 text-[10px] font-bold tracking-widest transition-all flex items-center gap-2 group"
+            className="px-4 py-2 bg-white/5 border border-white/10 hover:border-cyan-500/50 text-[10px] font-bold tracking-widest transition-all flex items-center justify-center gap-2 group"
           >
             <Compass className={`w-3 h-3 ${status === 'ACQUIRING' ? 'animate-spin' : 'group-hover:rotate-45'}`} /> 
             {location ? `LOC: ${location.lat.toFixed(2)}, ${location.lng.toFixed(2)}` : 'ACQUIRE COORDINATES'}
@@ -87,7 +95,7 @@ const GeoInt: React.FC<GeoIntProps> = ({ role }) => {
           <button 
             disabled={!location || status === 'SEARCHING'}
             onClick={findSecureNodes}
-            className="px-4 py-2 bg-cyan-500 disabled:bg-gray-800 disabled:text-gray-500 text-black text-[10px] font-bold tracking-widest flex items-center gap-2 transition-all hover:bg-cyan-400 active:scale-95"
+            className="px-4 py-2 bg-cyan-500 disabled:bg-gray-800 disabled:text-gray-500 text-black text-[10px] font-bold tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-cyan-400 active:scale-95"
           >
             <Search className={`w-3 h-3 ${status === 'SEARCHING' ? 'animate-pulse' : ''}`} />
             {status === 'SEARCHING' ? 'SCANNING...' : 'IDENTIFY SECURE NODES'}
@@ -114,14 +122,14 @@ const GeoInt: React.FC<GeoIntProps> = ({ role }) => {
             </div>
 
             <div className="absolute top-4 left-4 flex gap-2">
-              <span className="bg-black/80 border border-cyan-500/30 px-2 py-0.5 text-[8px] font-bold text-cyan-400 orbitron">SIG-INT</span>
-              <span className="bg-black/80 border border-white/10 px-2 py-0.5 text-[8px] font-bold text-gray-400">SAT-LINK: {location ? '98%' : 'OFF'}</span>
+              <span className="bg-black/80 border border-cyan-500/30 px-2 py-0.5 text-[8px] font-bold text-cyan-400 orbitron uppercase">Sig-Int</span>
+              <span className="bg-black/80 border border-white/10 px-2 py-0.5 text-[8px] font-bold text-gray-400 uppercase">SAT-LINK: {location ? '98%' : 'OFF'}</span>
             </div>
           </div>
           
           {error && (
             <div className="mt-4 p-4 bg-red-950/20 border border-red-500/30 flex items-center gap-3 animate-shake">
-              <Activity className="w-4 h-4 text-red-500" />
+              <AlertCircle className="w-4 h-4 text-red-500" />
               <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest leading-none">{error}</span>
             </div>
           )}
@@ -160,7 +168,7 @@ const GeoInt: React.FC<GeoIntProps> = ({ role }) => {
                 </div>
                 
                 <div className="prose prose-invert max-w-none">
-                  <p className="text-xs text-gray-400 leading-relaxed font-mono whitespace-pre-wrap">
+                  <p className="text-xs md:text-sm text-gray-400 leading-relaxed font-mono whitespace-pre-wrap">
                     {results.text}
                   </p>
                 </div>

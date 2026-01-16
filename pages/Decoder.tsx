@@ -76,13 +76,22 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
     setError(null);
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) {
+        throw new Error("API KEY MISSING // SYSTEM HALTED");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `Analyze this cybersecurity intelligence intelligence source (${activeSource.tag}) and reconstruct the hidden symbolic message. The context is ${activeSource.type} data. Provide a short 1-sentence classified message and a security level name like "ALPHA", "OMEGA", etc.`
+        contents: [{
+          role: 'user',
+          parts: [{ text: `Analyze this signal source (${activeSource.tag}) and reconstruct the hidden intelligence message. Context: ${activeSource.type} imagery. Format: Provide exactly one short sentence for the 'message' and exactly one capitalized word for the 'security level' (e.g., OMEGA).` }]
+        }]
       });
 
       const text = response.text || "NO DATA RETRIEVED";
+      // Simple heuristic extraction if AI doesn't return JSON
       const clearanceMatch = text.match(/[A-Z]{4,}/);
       const clearance = clearanceMatch ? `CLEARANCE ${clearanceMatch[0]}` : activeSource.clearance;
 
@@ -93,9 +102,9 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
             clearance: clearance
         } 
       }));
-    } catch (err) {
-      setError("AI Inference Error: Deep Layer Reconstruction Failed.");
-      console.error(err);
+    } catch (err: any) {
+      console.error("Decoder Error Trace:", err);
+      setError(`AI INFERENCE FAILED: ${err.message || 'UNKNOWN PROTOCOL ERROR'}`);
     } finally {
       setIsDecoding(false);
     }
@@ -108,20 +117,20 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fadeIn">
-      <div className="flex justify-between items-end border-b border-white/5 pb-6">
+    <div className="max-w-6xl mx-auto space-y-8 animate-fadeIn px-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/5 pb-6 gap-4">
         <div>
-          <h2 className="orbitron text-2xl font-bold tracking-widest text-white uppercase">Signal Intelligence Hub</h2>
-          <p className="text-gray-500 text-xs mt-1 uppercase tracking-tighter">Multi-Layer Visual Reconstruction Terminal</p>
+          <h2 className="orbitron text-xl md:text-2xl font-bold tracking-widest text-white uppercase">Signal Intelligence Hub</h2>
+          <p className="text-gray-500 text-[10px] md:text-xs mt-1 uppercase tracking-tighter">Multi-Layer Visual Reconstruction Terminal</p>
         </div>
         <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-cyan-950/20 px-3 py-1 border border-cyan-500/20 rounded">
                 <Activity className="w-3 h-3 text-cyan-500 animate-pulse" />
-                <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Live Uplink Active</span>
+                <span className="text-[9px] md:text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Live Uplink Active</span>
             </div>
             <div className="flex items-center gap-2 bg-white/5 px-3 py-1 border border-white/10 rounded">
                 <FileKey className="w-3 h-3 text-gray-500" />
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Auth: {role}</span>
+                <span className="text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">Auth: {role}</span>
             </div>
         </div>
       </div>
@@ -133,7 +142,7 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
           <h3 className="text-[10px] font-bold text-gray-600 tracking-widest uppercase flex items-center gap-2 mb-4">
             <Radio className="w-3 h-3" /> Select Signal Source
           </h3>
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
             {SOURCES.map((source, index) => (
               <button
                 key={source.id}
@@ -144,25 +153,25 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
                   : 'bg-black/40 border-white/5 hover:border-white/20'
                 }`}
               >
-                <div className="w-12 h-12 flex-shrink-0 bg-gray-900 overflow-hidden border border-white/10">
+                <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 bg-gray-900 overflow-hidden border border-white/10">
                   <img src={source.thumbnail} alt={source.tag} className={`w-full h-full object-cover grayscale transition-all ${activeSourceIndex === index ? 'opacity-100' : 'opacity-40'}`} />
                 </div>
-                <div className="text-left">
-                  <div className={`text-[10px] font-bold tracking-widest uppercase ${activeSourceIndex === index ? 'text-cyan-400' : 'text-gray-500'}`}>
+                <div className="text-left hidden sm:block">
+                  <div className={`text-[9px] md:text-[10px] font-bold tracking-widest uppercase ${activeSourceIndex === index ? 'text-cyan-400' : 'text-gray-500'}`}>
                     {source.tag}
                   </div>
                   <div className="text-[8px] text-gray-700 font-mono uppercase">{source.type}</div>
                 </div>
                 {decodedState[source.id] && (
                   <div className="absolute right-3 top-3">
-                    <Unlock className="w-3 h-3 text-cyan-500 opacity-50" />
+                    <Unlock className="w-2.5 h-2.5 text-cyan-500 opacity-50" />
                   </div>
                 )}
               </button>
             ))}
           </div>
 
-          <div className="p-4 bg-black/40 border border-white/5 rounded mt-6 space-y-3">
+          <div className="p-4 bg-black/40 border border-white/5 rounded mt-6 space-y-3 hidden lg:block">
              <div className="flex items-center gap-2 text-gray-500">
                <Info className="w-3 h-3" />
                <span className="text-[8px] font-bold uppercase tracking-widest">Metadata</span>
@@ -236,31 +245,31 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
                   </div>
                 ) : currentDecodedData ? (
                   <div className="text-center space-y-6 animate-fadeIn">
-                    <div className="relative">
-                       <p className="text-sm text-gray-200 font-mono italic leading-loose tracking-wide">
+                    <div className="relative px-2">
+                       <p className="text-sm md:text-base text-gray-200 font-mono italic leading-loose tracking-wide">
                         {currentDecodedData.message}
                        </p>
                        <div className="absolute -inset-2 bg-cyan-500/5 blur-lg -z-10" />
                     </div>
                     
-                    <div className="inline-block p-6 border border-cyan-500/30 rounded bg-cyan-500/5 relative group overflow-hidden">
+                    <div className="inline-block p-4 md:p-6 border border-cyan-500/30 rounded bg-cyan-500/5 relative group overflow-hidden">
                         <div className="absolute inset-0 bg-cyan-400/5 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                        <span className="orbitron text-cyan-400 text-xl font-black tracking-[0.2em]">{currentDecodedData.clearance}</span>
+                        <span className="orbitron text-cyan-400 text-lg md:text-xl font-black tracking-[0.2em]">{currentDecodedData.clearance}</span>
                     </div>
 
-                    <div className="flex justify-between items-center text-[9px] text-cyan-900 font-bold uppercase tracking-[0.3em] pt-4 border-t border-white/5">
+                    <div className="flex justify-between items-center text-[8px] md:text-[9px] text-cyan-900 font-bold uppercase tracking-[0.3em] pt-4 border-t border-white/5">
                       <span>Sync Confidence: {activeSource.quality}</span>
-                      <span>Bitrate: 4.2 MB/s</span>
+                      <span>4.2 MB/s</span>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center space-y-6 flex flex-col items-center">
-                     <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02]">
-                        <Lock className="w-6 h-6 text-gray-800" />
+                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-full border border-white/10 flex items-center justify-center bg-white/[0.02]">
+                        <Lock className="w-5 h-5 md:w-6 md:h-6 text-gray-800" />
                      </div>
                      <div className="space-y-1">
-                        <p className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">Awaiting Decryption Protocol</p>
-                        <p className="text-[8px] text-gray-800 uppercase tracking-tighter">Authorized access required for AI analysis</p>
+                        <p className="text-[9px] md:text-[10px] text-gray-600 uppercase tracking-widest font-bold">Awaiting Decryption Protocol</p>
+                        <p className="text-[7px] md:text-[8px] text-gray-800 uppercase tracking-tighter">Authorized access required</p>
                      </div>
                   </div>
                 )}
@@ -268,11 +277,11 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
             </div>
           </div>
 
-          <div className="flex justify-center gap-6 pt-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <button 
               onClick={startDecoding}
               disabled={isDecoding || !!currentDecodedData}
-              className={`px-10 py-4 border text-xs font-bold orbitron tracking-[0.3em] transition-all flex items-center gap-3 rounded-sm ${
+              className={`px-6 py-4 border text-[10px] font-bold orbitron tracking-[0.3em] transition-all flex items-center justify-center gap-3 rounded-sm ${
                 currentDecodedData 
                 ? 'bg-green-500/10 border-green-500/30 text-green-500 cursor-not-allowed' 
                 : 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/20 active:scale-95'
@@ -287,7 +296,7 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
                 delete newState[activeSource.id];
                 return newState;
               })}
-              className="px-10 py-4 bg-white/5 border border-white/20 text-gray-500 text-xs font-bold orbitron tracking-[0.3em] hover:bg-white/10 transition-all rounded-sm uppercase"
+              className="px-6 py-4 bg-white/5 border border-white/20 text-gray-500 text-[10px] font-bold orbitron tracking-[0.3em] hover:bg-white/10 transition-all rounded-sm uppercase"
             >
               Flush Cache
             </button>
@@ -296,7 +305,7 @@ const Decoder: React.FC<DecoderProps> = ({ role }) => {
           {error && (
             <div className="p-4 bg-red-950/20 border border-red-500/30 flex items-center gap-3 animate-shake justify-center">
               <AlertCircle className="w-4 h-4 text-red-500" />
-              <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">{error}</span>
+              <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest text-center">{error}</span>
             </div>
           )}
         </div>
