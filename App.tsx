@@ -17,7 +17,10 @@ import {
   LogOut,
   Flower,
   MapPin,
-  ShieldCheck
+  ShieldCheck,
+  Menu,
+  X,
+  Activity
 } from 'lucide-react';
 
 import Home from './pages/Home';
@@ -249,6 +252,7 @@ const App: React.FC = () => {
 
 const Navbar: React.FC<{ auth: AuthState, logout: () => void, triggerCommand: () => void }> = ({ auth, logout, triggerCommand }) => {
   const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/ceremonial', label: 'CEREMONIAL', icon: Flower },
@@ -261,52 +265,122 @@ const Navbar: React.FC<{ auth: AuthState, logout: () => void, triggerCommand: ()
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 border-b border-cyan-500/20 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-cyan-500 flex items-center justify-center rounded-sm">
-            <ShieldAlert className="text-black w-5 h-5" />
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 border-b border-cyan-500/20 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+          <Link to="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-cyan-500 flex items-center justify-center rounded-sm">
+              <ShieldAlert className="text-black w-5 h-5" />
+            </div>
+            <span className="orbitron font-bold tracking-tighter text-lg md:text-xl text-cyan-400">
+              VISUAL <span className="text-white">CIPHER</span> LAB
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-6">
+            {navItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path}
+                className={`text-xs font-bold tracking-widest transition-colors flex items-center gap-1.5 ${
+                  location.pathname === item.path ? 'text-cyan-400' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                {item.label}
+              </Link>
+            ))}
           </div>
-          <span className="orbitron font-bold tracking-tighter text-lg md:text-xl text-cyan-400">
-            VISUAL <span className="text-white">CIPHER</span> LAB
-          </span>
-        </Link>
 
-        <div className="hidden md:flex items-center gap-6">
-          {navItems.map((item) => (
-            <Link 
-              key={item.path}
-              to={item.path}
-              className={`text-xs font-bold tracking-widest transition-colors flex items-center gap-1.5 ${
-                location.pathname === item.path ? 'text-cyan-400' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </Link>
-          ))}
-        </div>
+          <div className="flex items-center gap-4">
+            {!auth.isAuthenticated ? (
+              <Link 
+                to="/login" 
+                className="px-4 py-1.5 bg-cyan-500 text-black text-[10px] font-bold tracking-widest orbitron hover:bg-cyan-400 transition-colors"
+              >
+                AUTHORIZE
+              </Link>
+            ) : (
+              <button 
+                onClick={triggerCommand}
+                className="hidden sm:flex items-center gap-1 bg-red-900/20 border border-red-500/30 px-2 py-1 rounded hover:bg-red-900/40 transition-all"
+              >
+                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                 <span className="text-[10px] text-red-400 font-bold uppercase tracking-tighter">SECURE CHANNEL</span>
+              </button>
+            )}
 
-        <div className="flex items-center gap-4">
-          {!auth.isAuthenticated ? (
-            <Link 
-              to="/login" 
-              className="px-4 py-1.5 bg-cyan-500 text-black text-[10px] font-bold tracking-widest orbitron hover:bg-cyan-400 transition-colors"
-            >
-              AUTHORIZE
-            </Link>
-          ) : (
+            {/* Mobile Menu Toggle */}
             <button 
-              onClick={triggerCommand}
-              className="flex items-center gap-1 bg-red-900/20 border border-red-500/30 px-2 py-1 rounded hover:bg-red-900/40 transition-all"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-cyan-400 hover:bg-cyan-500/10 rounded transition-all"
             >
-               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-               <span className="text-[10px] text-red-400 font-bold uppercase tracking-tighter">SECURE CHANNEL</span>
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-          )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-[45] bg-black flex flex-col pt-20 px-4 md:hidden animate-fadeIn overflow-y-auto pb-8">
+          <div className="absolute inset-0 pointer-events-none crt-scanline opacity-10" />
+          
+          <div className="flex flex-col gap-2 mt-4">
+            <div className="px-4 py-2 border-b border-cyan-500/10 mb-2">
+              <span className="text-[10px] text-cyan-900 font-bold tracking-[0.3em] uppercase flex items-center gap-2">
+                <Activity className="w-3 h-3" /> System Navigation
+              </span>
+            </div>
+            
+            {navItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path}
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center gap-4 px-6 py-5 rounded border transition-all ${
+                  location.pathname === item.path 
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(0,245,255,0.05)]' 
+                  : 'bg-white/[0.02] border-white/5 text-gray-400 active:bg-white/5'
+                }`}
+              >
+                <div className={`p-2 rounded-sm ${location.pathname === item.path ? 'bg-cyan-500/20' : 'bg-black/50 border border-white/5'}`}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="orbitron text-[13px] font-bold tracking-widest uppercase">{item.label}</span>
+                  <span className="text-[8px] text-gray-600 uppercase tracking-tighter">Access Module V.0.4</span>
+                </div>
+                <ChevronRight className={`ml-auto w-4 h-4 ${location.pathname === item.path ? 'text-cyan-400' : 'text-gray-800'}`} />
+              </Link>
+            ))}
+
+            {auth.isAuthenticated && (
+              <button 
+                onClick={() => {
+                  triggerCommand();
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-4 px-6 py-5 mt-4 rounded border bg-red-950/20 border-red-500/30 text-red-400"
+              >
+                <div className="p-2 bg-red-500/20 rounded-sm">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="orbitron text-[13px] font-bold tracking-widest uppercase">Secure Channel</span>
+                  <span className="text-[8px] text-red-900 uppercase tracking-tighter">Active Monitoring Level 1</span>
+                </div>
+              </button>
+            )}
+          </div>
+          
+          <div className="mt-auto pt-10 text-center">
+            <p className="text-[9px] text-cyan-900 font-bold tracking-[0.4em] uppercase">Visual Cipher Lab // mobile_interface_01</p>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
